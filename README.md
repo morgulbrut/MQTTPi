@@ -1,4 +1,4 @@
-﻿# MQTTPi
+# MQTTPi
 
 Simple setup for for a mosquitto broker and node-red, for testing and home use.
 
