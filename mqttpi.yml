@@ -38,7 +38,7 @@
           interface {{ interface }}
           static ip_address={{ staticIP }}
           static routers={{ staticGATEWAY }}
-          static domain_name_servers=192.168.0.1
+          static domain_name_servers={{ staticDNS }}
 
     - name: Create data platform network
       docker_network:
