@@ -18,22 +18,13 @@
     - name: Expand RasPi Filesystem
       shell: "raspi-config nonint do_expand_rootfs"
 
-    - name: Configure static IP in  /etc/dhcpcd.conf
+    - name: Configure static IP in /etc/dhcpcd.conf
       copy:
         dest: /etc/dhcpcd.conf
         owner: root
         group: root
         mode: 0664
         content: |
-          hostname
-          clientid
-          persistent
-          option rapid_commit
-          option domain_name_servers, domain_name, domain_search, host_name
-          option classless_static_routes
-          option interface_mtu
-          require dhcp_server_identifier
-          slaac private
           interface '{{ interface }}'
           static ip_address='{{ staticIP }}'
           static routers='{{ staticGATEWAY }}'
@@ -88,5 +79,3 @@
       shell: "sleep 1 && shutdown -r now +1"
       async: 1
       poll: 0
-      notify:
-        - wait-for-reboot
