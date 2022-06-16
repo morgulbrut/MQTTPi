@@ -25,10 +25,21 @@
         group: root
         mode: 0664
         content: |
-          interface '{{ interface }}'
-          static ip_address='{{ staticIP }}'
-          static routers='{{ staticGATEWAY }}'
-          static domain_name_servers='{{ staticDNS }}'
+          hostname
+          clientid
+          persistent
+          option rapid_commit
+          option domain_name_servers, domain_name, domain_search, host_name
+          option classless_static_routes
+          option interface_mtu
+          #option ntp_servers
+          require dhcp_server_identifier
+          slaac private
+          interface {{ interface }}
+          static ip_address={{ staticIP }}
+          static routers={{ staticGATEWAY }}
+          static domain_name_servers=192.168.0.1
+
 
     - name: Create data platform network
       docker_network:
