@@ -1,0 +1,92 @@
+---
+- name: "MQTTpi"
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    docker_install_compose: false
+    docker_users:
+      - piS
+    staticIP: 192.168.0.90/24
+    staticGATEWAY: 192.168.0.1
+    staticDNS: 8.8.8.8
+    interface: eth0
+  roles:
+    - geerlingguy.docker_arm
+  
+  tasks:
+    - name: Expand RasPi Filesystem
+      shell: "raspi-config nonint do_expand_rootfs"
+
+    - name: Configure static IP in  /etc/dhcpcd.conf
+      copy:
+        dest: /etc/dhcpcd.conf
+        owner: root
+        group: root
+        mode: 0664
+        content: |
+          hostname
+          clientid
+          persistent
+          option rapid_commit
+          option domain_name_servers, domain_name, domain_search, host_name
+          option classless_static_routes
+          option interface_mtu
+          require dhcp_server_identifier
+          slaac private
+          interface '{{ interface }}'
+          static ip_address='{{ staticIP }}'
+          static routers='{{ staticGATEWAY }}'
+          static domain_name_servers='{{ staticDNS }}'
+
+    - name: Create data platform network
+      docker_network:
+        name: dataplatform
+        driver: bridge
+
+    - name: Create Node-RED container
+      docker_container:
+        restart: yes
+        restart_policy: always
+        name: nodered
+        image: nodered/node-red
+        pull: yes
+        state: started
+        networks:
+          - name: dataplatform
+        volumes:
+          - 'nr-data:/data'
+        ports:
+          - '1880:1880'
+
+    - name: Create Mosquitto container
+      docker_container:
+        restart: yes
+        restart_policy: always
+        name: mosquitto
+        image: eclipse-mosquitto:latest
+        pull: yes
+        state: started
+        networks:
+          - name: dataplatform
+        volumes:
+          - 'mq-data:/mosquitto/config:ro'
+        ports:
+          - '1883:1883'
+      
+    - name: Config Mosquitto
+      copy:
+        dest: /var/lib/docker/volumes/mq-data/_data/mosquitto.conf
+        owner: 1883
+        group: 1883
+        mode: 0644
+        content: |
+          listener 1883
+          allow_anonymous true
+
+    - name: Reboot
+      shell: "sleep 1 && shutdown -r now +1"
+      async: 1
+      poll: 0
+      notify:
+        - wait-for-reboot
