@@ -47,7 +47,7 @@ git clone https://github.com/morgulbrut/MQTTPi.git
 Change to the directory with 
 
 ```
-cd mqttpi
+cd MQTTPi
 ```
 
 Finally run the playbook with 
